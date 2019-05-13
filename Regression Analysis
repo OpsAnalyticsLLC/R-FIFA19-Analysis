@@ -1,0 +1,111 @@
+library(caret)
+library(ggplot2)
+library(car)
+library(forecast)
+library(broom)
+fifa <- read.csv("fifa_normalized_without_overall.csv")
+# radomize the entire data set to eliminate sample order bias 
+fifa <- fifa[sample(nrow(fifa)),]
+fifa<- fifa[c(-1)]
+str(fifa)
+#names(fifa)[2]<- "Market.Value"
+#data particion 
+set.seed(1)
+train.size = nrow(fifa)*.60
+train.df <- fifa[c(1:train.size),]
+valid.df <- fifa[c((nrow(train.df)+1):nrow(fifa)),]
+print(nrow(train.df))
+print(nrow(valid.df))
+
+#Use lm () to run a linear regression on value on all predictors in the data set 
+fifa.lm <- lm(Market.Value ~., data= train.df)
+options(scipen=999)
+summary(fifa.lm)
+accuracy(fifa.lm)
+
+#check for Variance Inflation Factor (VIF); must be <10; 
+#should be less than 5 
+vif(fifa.lm)
+
+#additional diagnostics to check for outliers/leverage points 
+par(mfrow=c(2,2))
+plot(fifa.lm)
+
+#forecast of of the model on the validation data set 
+fifa.pred <- predict(fifa.lm, valid.df)
+options(scipen=999, digits=0)
+some.residuals <- valid.df$Market.Value[1:20] - fifa.pred[1:20]
+data.frame("Predicted" = fifa.pred[1:20], "Actual" = valid.df$Market.Value[1:20],
+           "Residual"= some.residuals)
+
+#forward selection 
+#create model with no predictors for bottom of search range
+fifa.lm.null <- lm(Market.Value~1, data=train.df)
+summary(fifa.lm.null)
+
+#The step() function uses a lower (model with no predictors) and upper bound (model with all the 
+#the predictors to chechk for the significant variables 
+## http://www.sthda.com/english/articles/37-model-selection-essentials-in-r/154-stepwise-regression-essentials-in-r/ ## 
+fifa.lm.forward <- step(fifa.lm.null, scope=list(lower=fifa.lm.null, 
+                                              upper=fifa.lm), direction= "forward")
+summary(fifa.lm.forward)
+
+#backward selection 
+fifa.lm.backward <- step(fifa.lm, direction= "backward")
+summary(fifa.lm.backward)
+
+signifincat_vars = list()
+stats<- tidy(fifa.lm.backward)
+for (i in 1:length(stats$p.value)){
+  if(stats[i, 5] < .05){
+    signifincat_vars[i]<- stats$term[i]
+  }
+} 
+
+print(signifincat_vars)
+stats[,5]
+#stepwise 
+fifa.lm.both <- step(fifa.lm, direction="both")
+summary (fifa.lm.both)
+
+#From the data frame we can see that models "Both" and "Backwards" are the models with the 
+# AIC. Since we're looking to eliminate the least significant variables backwards 
+print("AIC Comparison of step() functions")
+data.frame(
+  Forward = AIC(fifa.lm.forward),
+  Backwards = AIC(fifa.lm.backward), 
+  Both = AIC(fifa.lm.both))
+
+# BIC comparisons 
+print("BIC Comparison of step() functions")
+data.frame(
+  Forward = BIC(fifa.lm.forward),
+  Backwards = BIC(fifa.lm.backward), 
+  Both = BIC(fifa.lm.both))
+
+#forward selection with polynomial 
+#create model with no predictors for bottom of search range
+fifa.lm.null.poly <- lm(Market.Value~1+poly(Age, 2), data=train.df)
+#full model 
+fifa_without_Age<- lm(Market.Value~. -1 + poly(Age), data=train.df)
+#use step()to run forward selection 
+fifa_newmodel <- step(fifa.lm.null, scope=list(lower=fifa.lm.null.poly, 
+                                               upper=fifa_without_Age), direction= "forward")
+summary(fifa_newmodel)
+accuracy(fifa_newmodel)
+
+plot(fifa.lm.final$fitted.values)
+
+                                        ######FINAL REGRESSION MODEL#####
+
+#Use lm () to run a linear regression on value on all predictors in the data set; add a polynomial 
+fifa.lm.final <- lm(Market.Value~ poly(Age, 2)+New.International.Reputation+New.Skill.Moves+Position+New.LS+
+                NEW.LAM+New.LM+New.LWB+New.LDM+New.LCB+New.Finishing+New.HeadingAccuracy+
+                New.ShortPassing+New.Volleys+New.LongPassing+New.BallControl+New.SpringSpeed+New.Reactions+
+                New.Balance+New.Positioning+New.Vision+New.Composure+New.Markiing+New.GKDiving+New.GKHandling
+              + New.GKPositioning + New.GKReflexes, data = train.df)
+options(scipen=999)
+summary(fifa.lm.final)
+accuracy(fifa.lm.final)
+plot(train.df$Market.Value, col="blue")
+lines(fifa.lm.final$fitted.values, col="green")
