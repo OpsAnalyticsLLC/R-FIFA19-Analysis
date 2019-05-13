@@ -14,129 +14,153 @@ fifa<- fifa[c(-1)]
 str(fifa)
 #names(fifa)[2]<- "Market.Value"
 #data particion 
+fifa <- fifa[sample(nrow(fifa)),]
 set.seed(1)
-train.size <- nrow(fifa)*.60
-train.df <- fifa[c(1:train.size),]
-valid.df <- fifa[c((nrow(train.df)+1):nrow(fifa)),]
+new.fifa<- as.tibble(fifa)
+New_Fifa<- new.fifa %>% select(Market.Value,New.LCB,New.LS,New.GKPositioning,
+                               New.Reactions,New.LDM,New.LB,New.LF,New.LM,
+                               New.StandingTackle,New.LWB,New.Markiing,NEW.LAM,
+                               New.GKHandling,New.GKDiving,New.GKReflexes,
+                               New.Finishing,New.StandingTackle,
+                               Position,New.HeadingAccuracy,New.LCM,
+                               New.BallControl,New.Strength,New.LongPassing,
+                               New.ShortPassing,New.Vision,New.International.Reputation)
+train.size <- nrow(New_Fifa)*.60
+train.df <- New_Fifa[c(1:train.size),]
+valid.df <- New_Fifa[c((nrow(train.df)+1):nrow(fifa)),]
 print(nrow(train.df))
 print(nrow(valid.df))
 
 #regressor tree 
-Fifa.tree.regressor <- rpart(Market.Value ~ ., data = train.df, method = "anova")
-summary(Fifa.tree.regressor)
+#Fifa.tree.regressor <- rpart(Market.Value ~ ., data = train.df, method = "anova")
+#summary(Fifa.tree.regressor)
 
 #plot of the regressor tree 
-prp(Fifa.tree.regressor, type = 1, extra = 1, split.font = 1, varlen = -10) 
+#prp(Fifa.tree.regressor, type = 1, extra = 1, split.font = 1, varlen = -10) 
 
 #length of the tree 
-length(Fifa.tree.regressor$frame$var[Fifa.tree.regressor$frame$var == "<leaf>"])
+#length(Fifa.tree.regressor$frame$var[Fifa.tree.regressor$frame$var == "<leaf>"])
 
 # cpredictions on the training data 
-Fifa.Tree.Regressor.pred.train <- predict(Fifa.tree.regressor,train.df,type = "vector")
+#Fifa.Tree.Regressor.pred.train <- predict(Fifa.tree.regressor,train.df,type = "vector")
 
 # prediction vs actual values 
-data.frame(
-  "Predicted" = Fifa.Tree.Regressor.pred.train[1:20],
-  "Actual_Values" = train.df$Market.Value[1:20])
+#data.frame(
+#  "Predicted" = Fifa.Tree.Regressor.pred.train[1:20],
+#  "Actual_Values" = train.df$Market.Value[1:20])
 
 # cpredictions on the validation data 
-Fifa.Tree.Regressor.pred.valid <- predict(Fifa.tree.regressor,valid.df,type = "vector")
+#Fifa.Tree.Regressor.pred.valid <- predict(Fifa.tree.regressor,valid.df,type = "vector")
 
 # prediction vs actual values 
-data.frame(
-  "Predicted" = Fifa.Tree.Regressor.pred.valid[1:20],
-  "Actual_Values" = valid.df$Market.Value[1:20])
-
-######################################## Second Best Model Fit #####################################
-#basic forrest 
-basic.forrrest<- randomForest(Market.Value ~.,data = train.df, ntree = 1000, importance = TRUE) 
-## random forest
-fifa.random_forrest <- randomForest(Market.Value ~ New.LCB+New.LS+New.GKPositioning+New.Reactions+New.LDM+
-                                      New.LB+New.LF+New.LM+New.StandingTackle+New.LWB+New.Markiing+NEW.LAM+
-                                      New.GKHandling+New.GKDiving+New.GKReflexes+New.Finishing+New.StandingTackle+
-                                      Position+New.Interceptions+New.LW+New.HeadingAccuracy+New.LCM+New.BallControl+
-                                      New.Strength+New.LongPassing+New.Positioning+New.ShortPassing+New.Aggression+
-                                      New.Vision+New.International.Reputation,data = train.df, ntree = 1000, importance = TRUE) 
-#summary of random forrest regresor 
-# R-Squared: 89.60
-summary(fifa.random_forrest)
-which.min(fifa.random_forrest$mse)
-
-#plot of the error rate of the random forrest
-plot(randomForest(Market.Value ~ New.LCB+New.LS+New.GKPositioning+New.Reactions+New.LDM+
-                    New.LB+New.LF+New.LM+New.StandingTackle+New.LWB+New.Markiing+NEW.LAM+
-                    New.GKHandling+New.GKDiving+New.GKReflexes+New.Finishing+New.StandingTackle+
-                    Position+New.Interceptions+New.LW+New.HeadingAccuracy+New.LCM+New.BallControl+
-                    New.Strength+New.LongPassing+New.Positioning+New.ShortPassing+New.Aggression+
-                    New.Vision+New.International.Reputation,data = train.df, ntree = 1000, importance = TRUE),
-     main= "Feature Importance of Random Forrest")
-grid()
-## variable importance plot
-varImpPlot(fifa.random_forrest, type = 1)
-
-# training set predictions 
-fifa.random_forrest.train.pred <- predict(fifa.random_forrest, train.df)
-summary(fifa.random_forrest.train.pred)
-# prediction vs actual values 
-data.frame(
-  "Predicted" = fifa.random_forrest.train.pred[1:20],
-  "Actual_Values" = train.df$Market.Value[1:20])
-
-# valid set predictions 
-fifa.random_forrest.valid.pred <- predict(fifa.random_forrest, valid.df)
-data.frame(
-  "Predicted" = fifa.random_forrest.valid.pred [1:20],
-  "Actual_Values" = valid.df$Market.Value[1:20])
-
-
-#RMSE of validation set
-RMSE_FIFA_VALID<- sqrt(mean((fifa.random_forrest.train.pred - valid.df$Market.Value)^2))
-print(RMSE_FIFA_VALID)
-
-#MAE of validation set
-MAE_FIFA_VALID<- mean(abs(fifa.random_forrest.train.pred - valid.df$Market.Value))
-print(MAE_FIFA_VALID)
-
+#data.frame(
+#  "Predicted" = Fifa.Tree.Regressor.pred.valid[1:20],
+#  "Actual_Values" = valid.df$Market.Value[1:20])
 
 ######################################## Best Model Fit #####################################
-#boosting 
-set.seed(1)
-new.fifa<- as.tibble(fifa)
-New_Fifa<- new.fifa %>% select(Market.Value,New.LCB,New.LS,New.GKPositioning,New.Reactions,New.LDM,
-                            New.LB,New.LF,New.LM,New.StandingTackle,New.LWB,New.Markiing,NEW.LAM,
-                            New.GKHandling,New.GKDiving,New.GKReflexes,New.Finishing,New.StandingTackle,
-                            Position,New.Interceptions,New.LW,New.HeadingAccuracy,New.LCM,New.BallControl,
-                            New.Strength,New.LongPassing,New.Positioning,New.ShortPassing,New.Aggression,
-                            New.Vision,New.International.Reputation)
-train.size <- nrow(fifa)*.60
-train.df <- New_Fifa[c(1:train.size),]
-valid.df <- New_Fifa[c((nrow(train.df)+1):nrow(fifa)),]
+#basic forrest 
+#basic.forrrest<- randomForest(Market.Value ~.,data = train.df, ntree = 500, importance = TRUE) 
+## random forest
+#fifa.random_forrest <- randomForest(Market.Value ~.,data = train.df, ntree = 500,
+#                                    importance = TRUE) 
 
+fifa.random_forrest <- randomForest(Market.Value ~.,data = valid.df, ntree = 500,
+                                    importance = TRUE) 
+print(fifa.random_forrest)
+summary(fifa.random_forrest)
+varImp(fifa.random_forrest)
+#summary of random forrest regresor 
+# R-Squared: 89.60
+plot(fifa.random_forrest, main = "Random Forrest Regressor: Error Rate")
+
+#plot of the error rate of the random forrest
+#plot(randomForest(Market.Value ~.,data = train.df, ntree = 500, importance = TRUE),
+#     main= "Training Error Loss Rate over 500 Trees")
+#plot(randomForest(Market.Value ~.,data = train.df, ntree = 500, importance = TRUE),
+#     main= "Validation Error Loss Rate over 500 Trees")
+## variable importance plot
+varImpPlot(fifa.random_forrest, type = 1, main = "Random Forest Regressor: Variables of Importance",
+           col="Blue")
+
+#R-Squared for training set 
+yhat_train<- predict(fifa.random_forrest, train.df)
+err_train<- (train.df$Market.Value - yhat_train)
+sse_train<- sum(err_train**2)
+naive_yhat_train <- mean(train.df$Market.Value)
+ssenaive_train <- sum((train.df$Market.Value-naive_yhat_train)**2)
+r2_train <- 1 - (sse_train/ssenaive_train)
+print(r2_train)
+#comparisons with actual values 
+data.frame(
+  "Predicted" = yhat_train[1:20],
+  "Actual_Values" = train.df$Market.Value[1:20])
+
+#R-Squared for validation set 
+yhat_valid<- predict(fifa.random_forrest, valid.df)
+err_valid<- (valid.df$Market.Value - yhat_valid)
+sse_valid<- sum(err_valid**2)
+naive_yhat_valid = mean(valid.df$Market.Value)
+ssenaive_valid = sum((valid.df$Market.Value-naive_yhat_valid)**2)
+r2_valid <- 1 - (sse_valid/ssenaive_valid)
+print(r2_valid)
+#comparisons with actual values 
+data.frame(
+  "Predicted" = yhat_valid[1:20],
+  "Actual_Values" = train.df$Market.Value[1:20])
+
+#RMSE
+caret::RMSE(yhat_train, train.df$Market.Value)
+caret::RMSE(yhat_valid, valid.df$Market.Value)
+
+######################################## Second Model Fit #####################################
+#boosting 
 #gradient boosted model for regression tree 
 #This is the equivalent of boosted classification tree using the function boosting() 
 # from the library(adabag) package 
-boost<- gbm(Market.Value ~ ., distribution = "gaussian", data = train.df, n.trees = 2000,
-             shrinkage = .01, interaction.depth = 10, cv.folds = 3)
+boost<- gbm(Market.Value ~ ., distribution = "gaussian", data = train.df, n.trees = 500,
+            shrinkage = .1, verbose = TRUE, interaction.depth = 1, n.cores = 1,
+            bag.fraction=.6, train.fraction=1, cv.folds = 5)
+print(boost)
+#function to see the number of optimal trees 
 noptimal_trees<- gbm.perf(boost, method = "cv")
 print(noptimal_trees)
-#plot of importance plot 
 summary(boost)
-#validation set predictions
-pred <- predict(boost, valid.df, n.trees = noptimal_trees)
+
+#R-Squared for training set 
+yhat_train<- predict(boost, train.df, n.trees = noptimal_trees)
+err_train<- (train.df$Market.Value - yhat_train)
+sse_train<- sum(err_train**2)
+naive_yhat_train <- mean(train.df$Market.Value)
+ssenaive_train <- sum((train.df$Market.Value-naive_yhat_train)**2)
+r2_train <- 1 - (sse_train/ssenaive_train)
+print(r2_train)
 #comparisons with actual values 
 data.frame(
-  "Predicted" = pred[1:20],
-  "Actual_Values" = valid.df$Market.Value[1:20])
+  "Predicted" = yhat_train[1:20],
+  "Actual_Values" = train.df$Market.Value[1:20])
+
+#R-Squared for validation set 
+yhat_valid<- predict(boost, valid.df, n.trees = noptimal_trees)
+err_valid<- (valid.df$Market.Value - yhat_valid)
+sse_valid<- sum(err_valid**2)
+naive_yhat_valid = mean(valid.df$Market.Value)
+ssenaive_valid = sum((valid.df$Market.Value-naive_yhat_valid)**2)
+r2_valid <- 1 - (sse_valid/ssenaive_valid)
+print(r2_valid)
+#comparisons with actual values 
+data.frame(
+  "Predicted" = yhat_valid[1:20],
+  "Actual_Values" = train.df$Market.Value[1:20])
+
+#RMSE of training set 
+RMSE_FIFA_train<- sqrt(mean((train.df$Market.Value -yhat_train)^2))
+print(RMSE_FIFA_train)
 
 #RMSE of validation set
-RMSE_FIFA_VALID<- sqrt(mean((pred - valid.df$Market.Value)^2))
+RMSE_FIFA_VALID<- sqrt(mean((valid.df$Market.Value - yhat_valid)^2))
 print(RMSE_FIFA_VALID)
 
-#MAE of validation set
-MAE_FIFA_VALID<- mean(abs(pred - valid.df$Market.Value))
-print(MAE_FIFA_VALID)
-
-#Plot of dependence plot of the most influencial variables 
+#Dependence plots of the most influencial variables 
 plot(boost, i = "New.Reactions", lwd = 3)
 plot(boost, i = "New.LCB", lwd = 3)
 plot(boost, i = "New.LF", lwd = 3)
@@ -154,7 +178,7 @@ plot(boost, i = "New.GKReflexes", lwd = 3)
 plot(boost, i = "New.LB", lwd = 3)
 
 # Validation set analysis 
-n.trees = seq(from=1 ,to=2000, by=1) 
+n.trees = seq(from=1 ,to=500, by=1) 
 pred <- predict(boost, valid.df, n.trees = n.trees)
 dim(pred)
 test_error<- with(valid.df,apply((pred-valid.df$Market.Value)^2,2,mean))
