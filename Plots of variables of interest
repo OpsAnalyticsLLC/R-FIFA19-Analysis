@@ -1,0 +1,62 @@
+#load the data 
+fifa <- read.csv("fifa_normalized_without_overall.csv")
+
+# radomize the entire data set to eliminate sample order bias 
+fifa <- fifa[sample(nrow(fifa)),]
+fifa<- fifa[c(-1)]
+
+#Summary of the data 
+summary(fifa)
+
+#boxplot 
+boxplot(Market.Value ~ Age, data = fifa, col=fifa$Age)
+#plot of target variable 
+par(mfrow=c(3,4))
+hist(fifa$Market.Value, 
+     xlab = "Market Value in $Millions (Log)",
+     main = "Histogram of Player Market Value",
+     col = "Blue")
+hist(fifa$Age, 
+     xlab = "Age",
+     main = "Histogram of Player Age",
+     col = "red")
+plot(fifa$Position, 
+     xlab = "Position",
+     main = "Distribution of Players' Position",
+     col = "green")
+hist(fifa$New.Stamina, 
+     xlab = "Players' Stamina Score",
+     main = "Distribution of Players' Stamina Score",
+     col = "orange")
+hist(fifa$New.GKReflexes, 
+     xlab = "Players' Goal Keeper Reflexes Score",
+     main = "Histogram of Players' Goal Keeper Reflexes Score",
+     col = "blue")
+hist(fifa$New.LF, 
+     xlab = "Players' Left Forward Score",
+     main = "Histogram of Players' Left Forward Score",
+     col = "red")
+hist(fifa$New.LS, 
+     xlab = "Left Side Player Score",
+     main = "Histogram of Players' Left Side Player Score",
+     col = "green")
+hist(fifa$New.LCB, 
+     xlab = "Left Center Back Score",
+     main = "Histogram of Players' Left Center Back Score",
+     col = "orange")
+hist(fifa$New.LDM, 
+     xlab = "Players' Left Center Midfield Score",
+     main = "Histogram of Players' Left Center Midfield Score",
+     col = "blue")
+hist(fifa$New.LM, 
+     xlab = "Players' Left Midfield Score",
+     main = "Histogram of Players' Left Midfield Score",
+     col = "red")
+hist(fifa$New.Reactions, 
+     xlab = "Players' Reactions Score",
+     main = "Histogram of Players' Reactions Score",
+     col = "green")
+hist(fifa$New.LongShots, 
+     xlab = "Players' Long Shots Score",
+     main = "Histogram of Players' Long Shots Score",
+     col = "orange")
